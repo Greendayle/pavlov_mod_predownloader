@@ -8,7 +8,7 @@ import re
 import sys
 from tqdm import tqdm
 
-API_KEY = 'YOUR_API_KEY_HERE'
+API_KEY = 'YOURMODIOAPIKEY'
 
 
 appdata_folder = os.getenv('LOCALAPPDATA')
@@ -30,7 +30,11 @@ if getattr(sys, 'frozen', False):
 elif __file__:
     application_path = os.path.dirname(__file__)
 
-mod_list_file = os.path.join(os.path.basename(application_path), "modlist.txt")
+mod_list_file = os.path.join(application_path, "modlist.txt")
+print("Looking for mod list file {}".format(mod_list_file))
+if not os.path.exists(mod_list_file):
+    input("Can't find {}, to loads mods from!".format(mod_list_file))
+    raise(FileNotFound(mod_list_file))
 
 with open(mod_list_file, "r") as mlf:
     mods_list_text = mlf.read()
