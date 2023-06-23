@@ -1,0 +1,15 @@
+# example mod list
+
+MapRotation=(MapId="UGC3011126", GameMode="SND") # dust2 CS1.6, 16MB
+MapRotation=(MapId="UGC2817844", GameMode="SND") # Ballistic, 432MB
+MapRotation=(MapId="UGC3002600", GameMode="SND") # Fire, 163MB
+MapRotation=(MapId="UGC3002208", GameMode="SND") # Zoo, 262MB
+MapRotation=(MapId="UGC3032599", GameMode="SND") # Apex, 176MB
+MapRotation=(MapId="UGC2996823", GameMode="SND") # Inferno, 685MB
+MapRotation=(MapId="UGC3018770", GameMode="SND") # Studio, 285MB
+MapRotation=(MapId="UGC2804502", GameMode="SND") # CN dust2, 662MB
+MapRotation=(MapId="UGC2803820", GameMode="SND") # basalt, 884.
+UGC3061028
+UGC3061028
+UGC2824923
+
