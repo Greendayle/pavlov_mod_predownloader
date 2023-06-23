@@ -8,7 +8,7 @@ import re
 import sys
 from tqdm import tqdm
 
-API_KEY = 'YOURMODIOAPIKEY'
+API_KEY = 'YOUR_MOD.io_API_KEY'
 
 
 appdata_folder = os.getenv('LOCALAPPDATA')
@@ -50,6 +50,8 @@ mod_ugcs = []
 for match in matches:
     print(match)
     mod_ugcs.append( match[3:])
+    
+mod_ugcs = list(set(mod_ugcs))
 
 
 def download(mod_url, mod_id, taint):
@@ -87,7 +89,7 @@ def download(mod_url, mod_id, taint):
         
 
 
-for mod_id in mod_ugcs:
+for mod_id in tqdm(mod_ugcs, desc='downloading mods'):
     
     url = "https://api.mod.io/v1/games/{}/mods/{}/files?api_key={}".format(pavlov_game_id, mod_id, API_KEY)
 
@@ -118,4 +120,5 @@ for mod_id in mod_ugcs:
     else:
         download(mod_url, mod_id, taint)
 
+input("Done, you can close this window")
 
