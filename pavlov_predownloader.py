@@ -63,8 +63,10 @@ def download(mod_url, mod_id, taint):
     zip_file_path = os.path.join(mod_dir, "UGC{}".format(mod_id), "temp.zip")
     
     
-    
-    response = requests.get(mod_url, stream=True)
+    headers = {
+            "User-Agent": "Pavlov Mod Updater"
+        }
+    response = requests.get(mod_url, stream=True, headers=headers)
     total_size = int(response.headers.get('Content-Length', 0))
 
     # Set up the progress bar
@@ -95,6 +97,7 @@ for mod_id in tqdm(mod_ugcs, desc='downloading mods'):
 
     headers = {
         "X-Modio-Platform": "Windows",
+        "User-Agent": "Pavlov Mod Updater"
     }
 
     response = requests.get(url, headers=headers)
