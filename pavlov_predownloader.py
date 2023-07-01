@@ -90,7 +90,6 @@ def download(mod_url, mod_id, taint):
     os.remove(zip_file_path)
         
 
-
 for mod_id in tqdm(mod_ugcs, desc='downloading mods'):
     
     url = "https://api.mod.io/v1/games/{}/mods/{}/files?api_key={}".format(pavlov_game_id, mod_id, API_KEY)
@@ -114,14 +113,15 @@ for mod_id in tqdm(mod_ugcs, desc='downloading mods'):
             with open(os.path.join(mod_dir, "UGC{}".format(mod_id), "taint"), 'r') as taint_ex:
                 if taint_ex.read().strip() != taint:
                     print("Mod {} exists, but old, replacing!".format(mod_id))
-                    download(mod_url, mod_id, taint)
                 else:
                     print("Mod {} exists and is up to date, skipping!".format(mod_id))
+                    continue
         except FileNotFoundError:
             print("Mod {} exists, but seems to be corrupted, replacing!".format(mod_id))
-            download(mod_url, mod_id, taint)
-    else:
-        download(mod_url, mod_id, taint)
+    try:
+       download(mod_url, mod_id, taint)
+    except Exception as e:
+        print("failed to download mod", mod_id, e)
 
 input("Done, you can close this window")
 
