@@ -8,8 +8,12 @@ import re
 import sys
 from tqdm import tqdm
 
-API_KEY = 'YOUR_MOD.io_API_KEY'
+API_KEY = 'YOUR MOD IO API KEY'
 
+headers = {
+    "X-Modio-Platform": "Windows",
+    "User-Agent": "Pavlov Mod Updater"
+}
 
 appdata_folder = os.getenv('LOCALAPPDATA')
 
@@ -33,11 +37,18 @@ elif __file__:
 mod_list_file = os.path.join(application_path, "modlist.txt")
 print("Looking for mod list file {}".format(mod_list_file))
 if not os.path.exists(mod_list_file):
-    input("Can't find {}, to loads mods from!".format(mod_list_file))
-    raise(FileNotFound(mod_list_file))
-
-with open(mod_list_file, "r") as mlf:
-    mods_list_text = mlf.read()
+    print("Can't find {}, to loads mods list from! Copy/Paste your server config/modlist in (UGC##### form) here instead, press CTRL+Z and Enter  after pasting to proceed".format(mod_list_file))
+    lines = []
+    while True:
+        try:
+            line = input()
+        except EOFError:
+            break
+        lines.append(line)
+    mods_list_text = "\n".join(lines)
+else:
+    with open(mod_list_file, "r") as mlf:
+        mods_list_text = mlf.read()
 
 pattern = r"(UGC\d+)"
 
@@ -70,7 +81,7 @@ def download(mod_url, mod_id, taint):
     total_size = int(response.headers.get('Content-Length', 0))
 
     # Set up the progress bar
-    progress_bar = tqdm(total=total_size, unit='B', unit_scale=True)
+    progress_bar = tqdm(total=total_size, unit='B', unit_scale=True, leave=False)
 
     # Download the file with progress
     with open(zip_file_path, 'wb') as file:
@@ -88,36 +99,51 @@ def download(mod_url, mod_id, taint):
     with open(os.path.join(mod_dir, "UGC{}".format(mod_id), "taint"), "w") as taint_f:
         taint_f.write(str(taint))
     os.remove(zip_file_path)
-        
 
-for mod_id in tqdm(mod_ugcs, desc='downloading mods'):
+def resolve_dependencies(mod_ugcs):
+    mod_ugcs_deps = set(mod_ugcs)
+    for mod_id in tqdm(mod_ugcs, desc='finding mod dependencies'):
+        url = "https://api.mod.io/v1/games/{}/mods/{}/dependencies?recursive=true&api_key={}".format(pavlov_game_id, mod_id, API_KEY)
+        response = requests.get(url, headers=headers)
+        try:
+            deps = json.loads(response.content.decode('utf-8'))['data']
+        except KeyError:
+            print("Mod {}, doesn't exist on mod.io, skipping".format(mod_id))
+            continue
+        for dep in deps:
+            mod_ugcs_deps.add(str(dep['mod_id']))
+
+    return list(mod_ugcs_deps)
+
+
+mod_ugcs_deps = resolve_dependencies(mod_ugcs)
+
+for mod_id in tqdm(mod_ugcs_deps, desc='downloading mods'):
     
     url = "https://api.mod.io/v1/games/{}/mods/{}/files?api_key={}".format(pavlov_game_id, mod_id, API_KEY)
-
-    headers = {
-        "X-Modio-Platform": "Windows",
-        "User-Agent": "Pavlov Mod Updater"
-    }
 
     response = requests.get(url, headers=headers)
     try:
         mod_url = json.loads(response.content.decode('utf-8'))['data'][0]['download']['binary_url']
     except KeyError:
-        print("Mod {}, doesn't exist on mod.io, skipping".format(mod_id))
+        print("\nMod {}, doesn't exist on mod.io, skipping".format(mod_id))
         continue
-        
+    except IndexError:
+        print("\nMod {}, doesn't have windows version, skipping".format(mod_id))
+        continue
+
     taint = mod_url.split('/')[-2]
     
     if os.path.exists(os.path.join(mod_dir, "UGC{}".format(mod_id))):
         try:
             with open(os.path.join(mod_dir, "UGC{}".format(mod_id), "taint"), 'r') as taint_ex:
                 if taint_ex.read().strip() != taint:
-                    print("Mod {} exists, but old, replacing!".format(mod_id))
+                    print("\nMod {} exists, but old, replacing!".format(mod_id))
                 else:
-                    print("Mod {} exists and is up to date, skipping!".format(mod_id))
+                    print("\nMod {} exists and is up to date, skipping!".format(mod_id))
                     continue
         except FileNotFoundError:
-            print("Mod {} exists, but seems to be corrupted, replacing!".format(mod_id))
+            print("\nMod {} exists, but seems to be corrupted, replacing!".format(mod_id))
     try:
        download(mod_url, mod_id, taint)
     except Exception as e:
